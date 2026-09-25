@@ -1,0 +1,42 @@
+#ifndef PPTP_PROXY_LWIPOPTS_H
+#define PPTP_PROXY_LWIPOPTS_H
+#define NO_SYS 1
+#define LWIP_SOCKET 0
+#define LWIP_NETCONN 0
+#define LWIP_IPV4 1
+#define LWIP_IPV6 0
+#define LWIP_ETHERNET 0
+#define LWIP_ARP 0
+#define LWIP_DNS 1
+#define DNS_TABLE_SIZE 16
+#define DNS_MAX_SERVERS 2
+#define PPP_SUPPORT 1
+#define PPPOS_SUPPORT 1
+#define PPPOE_SUPPORT 0
+#define PPPOL2TP_SUPPORT 0
+#define PAP_SUPPORT 0
+#define CHAP_SUPPORT 1
+#define MSCHAP_SUPPORT 1
+#define MPPE_SUPPORT 1
+#define EAP_SUPPORT 0
+#define CCP_SUPPORT 1
+#define PPP_IPV6_SUPPORT 0
+#define PPP_IPV4_SUPPORT 1
+#define LWIP_PPP_API 0
+#define LWIP_RAW 0
+#define LWIP_UDP 1
+#define LWIP_TCP 1
+#define TCP_MSS 1360
+#define TCP_WND (8 * TCP_MSS)
+#define TCP_SND_BUF (8 * TCP_MSS)
+#define MEM_SIZE (512 * 1024)
+#define MEMP_NUM_TCP_PCB 64
+#define MEMP_NUM_TCP_SEG 512
+#define MEMP_NUM_SYS_TIMEOUT 32
+#define PBUF_POOL_SIZE 128
+#define LWIP_DHCP 0
+#define LWIP_AUTOIP 0
+#define LWIP_IGMP 0
+#define LWIP_STATS 0
+#define LWIP_DEBUG 0
+#endif
