@@ -14,13 +14,14 @@ app="$root/build/PPTPProxy.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp "$root/Info.plist" "$app/Contents/Info.plist"
 cp "$root/AppIcon.icns" "$app/Contents/Resources/AppIcon.icns"
+cp -R "$root/en.lproj" "$root/ko.lproj" "$app/Contents/Resources/"
 cp "$root/lwip/COPYING" "$app/Contents/Resources/lwIP-COPYING"
 cp "$root/build/pptp-1.10.0/COPYING" "$app/Contents/Resources/PPTP-COPYING"
 cp "$root/build/engine/pptp-proxy" "$app/Contents/MacOS/pptp-proxy"
 cp "$root/build/pptp-1.10.0/pptp" "$app/Contents/MacOS/pptp"
 CLANG_MODULE_CACHE_PATH="$root/build/clang-cache" SWIFT_MODULE_CACHE_PATH="$root/build/swift-cache" \
   swiftc -sdk "$sdk" -target arm64-apple-macosx14.0 -parse-as-library -O \
-  "$root/PPTPProxyClient.swift" -o "$app/Contents/MacOS/PPTPProxyClient" \
+  "$root/PPTPProxyClient.swift" "$root/Localization.swift" -o "$app/Contents/MacOS/PPTPProxyClient" \
   -framework SwiftUI -framework AppKit -framework Security
 chmod 755 "$app/Contents/MacOS/"*
 codesign --force --deep --sign - "$app"

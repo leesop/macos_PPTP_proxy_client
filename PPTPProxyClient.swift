@@ -8,7 +8,7 @@ struct PPTPProxyClientApp: App {
     @NSApplicationDelegateAdaptor(QuitGuard.self) private var quitGuard
 
     var body: some Scene {
-        Window("PPTP 프락시", id: "main") { ContentView() }
+        Window(tr("PPTP 프락시"), id: "main") { ContentView() }
             .windowResizability(.contentSize)
     }
 }
@@ -30,23 +30,23 @@ private final class QuitGuard: NSObject, NSApplicationDelegate {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard ConnectionActivity.shared.isActive else { return .terminateNow }
         let alert = NSAlert()
-        alert.messageText = "연결 중에 앱을 종료하시겠습니까?"
-        alert.informativeText = "앱을 종료하면 PPTP 연결도 종료될 수 있습니다."
+        alert.messageText = tr("연결 중에 앱을 종료하시겠습니까?")
+        alert.informativeText = tr("앱을 종료하면 PPTP 연결도 종료될 수 있습니다.")
         alert.alertStyle = .warning
-        alert.addButton(withTitle: "연결 해제하고 종료")
-        alert.addButton(withTitle: "취소")
+        alert.addButton(withTitle: tr("연결 해제하고 종료"))
+        alert.addButton(withTitle: tr("취소"))
         guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
         if let path = ConnectionActivity.shared.controlSocketPath,
            FileManager.default.fileExists(atPath: path) {
             do {
                 guard try controlRequest(path: path, command: "STOP\n") == "OK STOP\n" else {
                     throw NSError(domain: "PPTPProxyClient", code: 4,
-                                  userInfo: [NSLocalizedDescriptionKey: "백엔드의 연결 해제 응답이 올바르지 않습니다."])
+                                  userInfo: [NSLocalizedDescriptionKey: tr("백엔드의 연결 해제 응답이 올바르지 않습니다.")])
                 }
             } catch {
                 let failure = NSAlert()
-                failure.messageText = "연결 해제에 실패했습니다"
-                failure.informativeText = "앱을 종료하지 않았습니다. 다시 시도하거나 로그를 확인하세요. \(error.localizedDescription)"
+                failure.messageText = tr("연결 해제에 실패했습니다")
+                failure.informativeText = tr("앱을 종료하지 않았습니다. 다시 시도하거나 로그를 확인하세요. \(error.localizedDescription)")
                 failure.alertStyle = .warning
                 failure.runModal()
                 return .terminateCancel
@@ -102,15 +102,15 @@ struct ContentView: View {
             HStack(spacing: 12) {
                 Image(nsImage: NSApp.applicationIconImage).resizable().frame(width: 42, height: 42)
                 VStack(alignment: .leading) {
-                    Text("PPTP 프락시").font(.title.bold())
-                    Text("Safari·프락시 클라이언트용 VPN 연결").foregroundStyle(.secondary)
+                    Text(tr("PPTP 프락시")).font(.title.bold())
+                    Text(tr("Safari·프락시 클라이언트용 VPN 연결")).foregroundStyle(.secondary)
                 }
             }
-            Picker("화면", selection: $page) {
-                ForEach(AppPage.allCases, id: \.self) { item in Text(item.rawValue).tag(item) }
+            Picker(tr("화면"), selection: $page) {
+                ForEach(AppPage.allCases, id: \.self) { item in Text(tr(item.rawValue)).tag(item) }
             }.pickerStyle(.segmented).labelsHidden()
             connectionSummary
-            Text(message).font(.callout).foregroundStyle(message.hasPrefix("실패") ? .red : .secondary)
+            Text(tr(message)).font(.callout).foregroundStyle(message.hasPrefix("실패") ? .red : .secondary)
             if page == .profile { profilePage }
             else { proxyPage }
         }
@@ -128,14 +128,14 @@ struct ContentView: View {
         HStack(spacing: 14) {
             Circle().fill(disconnecting ? Color.orange : (tunnelReady ? Color.green : (connecting || connected ? Color.orange : Color.gray)))
                 .frame(width: 9, height: 9)
-            Text(disconnecting ? "연결 해제 중" : (tunnelReady ? "PPP/MPPE 연결됨" : (connecting || connected ? "연결 중" : "연결 안 됨")))
+            Text(tr(disconnecting ? "연결 해제 중" : (tunnelReady ? "PPP/MPPE 연결됨" : (connecting || connected ? "연결 중" : "연결 안 됨"))))
                 .font(.subheadline.bold())
             Spacer()
             if connecting || connected {
-                Text("보냄 \(formattedBytes(sentBytes))")
-                Text("받음 \(formattedBytes(receivedBytes))")
+                Text(tr("보냄 \(formattedBytes(sentBytes))"))
+                Text(tr("받음 \(formattedBytes(receivedBytes))"))
                 Text("\(formattedDuration(connectedSeconds))")
-                Button(disconnecting ? "연결 해제 중…" : "연결 해제") { disconnect() }
+                Button(tr(disconnecting ? "연결 해제 중…" : "연결 해제")) { disconnect() }
                     .disabled(disconnecting)
             }
         }
@@ -149,38 +149,38 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 14) {
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 9) {
                 GridRow {
-                    Text("프로필")
-                    Picker("프로필", selection: $selectedID) {
-                        Text("새 프로필").tag("")
+                    Text(tr("프로필"))
+                    Picker(tr("프로필"), selection: $selectedID) {
+                        Text(tr("새 프로필")).tag("")
                         ForEach(profiles) { profile in Text(profile.name).tag(profile.id) }
                     }.labelsHidden()
                 }
-                GridRow { Text("이름"); TextField("프로필 이름", text: $profileName) }
-                GridRow { Text("PPTP 서버"); TextField("서버 주소", text: $server) }
-                GridRow { Text("VPN 아이디"); TextField("아이디", text: $username) }
+                GridRow { Text(tr("이름")); TextField(tr("프로필 이름"), text: $profileName) }
+                GridRow { Text(tr("PPTP 서버")); TextField(tr("서버 주소"), text: $server) }
+                GridRow { Text(tr("VPN 아이디")); TextField(tr("아이디"), text: $username) }
                 GridRow {
-                    Text("VPN 암호")
-                    SecureField(hasStoredPassword ? "키체인에 저장됨 · 변경하려면 입력" : "VPN 계정 암호", text: $password)
+                    Text(tr("VPN 암호"))
+                    SecureField(tr(hasStoredPassword ? "키체인에 저장됨 · 변경하려면 입력" : "VPN 계정 암호"), text: $password)
                 }
             }.textFieldStyle(.roundedBorder).disabled(connecting || connected)
 
             HStack {
-                Button("신규 등록") { selectedID = ""; clearForm() }.disabled(connecting || connected)
-                Button("저장") { _ = saveProfile() }.disabled(connecting || connected)
-                Button("삭제") { deleteProfile() }.disabled(selectedID.isEmpty || connecting || connected)
+                Button(tr("신규 등록")) { selectedID = ""; clearForm() }.disabled(connecting || connected)
+                Button(tr("저장")) { _ = saveProfile() }.disabled(connecting || connected)
+                Button(tr("삭제")) { deleteProfile() }.disabled(selectedID.isEmpty || connecting || connected)
                 Spacer()
-                if hasStoredPassword { Text("암호는 키체인에 저장됨").font(.caption).foregroundStyle(.secondary) }
+                if hasStoredPassword { Text(tr("암호는 키체인에 저장됨")).font(.caption).foregroundStyle(.secondary) }
             }
 
             HStack {
-                Button("연결") { connect() }.buttonStyle(.borderedProminent).disabled(connecting || connected)
-                Button("남은 연결 정리") { cleanupOrphanBackend() }
+                Button(tr("연결")) { connect() }.buttonStyle(.borderedProminent).disabled(connecting || connected)
+                Button(tr("남은 연결 정리")) { cleanupOrphanBackend() }
                     .disabled(connecting || connected || cleaningUp)
-                Button(logsExpanded ? "로그 접기" : "로그 보기") { logsExpanded.toggle(); if logsExpanded { refreshLog() } }
+                Button(tr(logsExpanded ? "로그 접기" : "로그 보기")) { logsExpanded.toggle(); if logsExpanded { refreshLog() } }
             }
             if logsExpanded {
                 ScrollView {
-                    Text(logText).font(.system(size: 11, design: .monospaced))
+                    Text(tr(logText)).font(.system(size: 11, design: .monospaced))
                         .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .frame(height: 155).padding(9)
@@ -192,22 +192,22 @@ struct ContentView: View {
 
     private var proxyPage: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("프락시 설정").font(.title3.bold())
-            Text(selectedID.isEmpty ? "프로필을 저장하면 포트포워딩 규칙도 함께 보관됩니다." : "현재 프로필: \(profileName)")
+            Text(tr("프락시 설정")).font(.title3.bold())
+            Text(tr(selectedID.isEmpty ? "프로필을 저장하면 포트포워딩 규칙도 함께 보관됩니다." : "현재 프로필: \(profileName)"))
                 .font(.caption).foregroundStyle(.secondary)
             Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 9) {
                 GridRow {
-                    Text("HTTP 프락시")
+                    Text(tr("HTTP 프락시"))
                     HStack { Text("127.0.0.1:"); TextField("18080", text: $httpPort).frame(width: 75) }
                 }
                 GridRow {
-                    Text("SOCKS5 프락시")
+                    Text(tr("SOCKS5 프락시"))
                     HStack { Text("127.0.0.1:"); TextField("11080", text: $socksPort).frame(width: 75) }
                 }
             }.textFieldStyle(.roundedBorder).disabled(applyingSettings)
             VStack(alignment: .leading, spacing: 5) {
-                Text("수동 포트포워딩").font(.headline)
-                Text("한 줄에 로컬포트:대상호스트:대상포트 (예: 15432:10.0.0.5:5432)")
+                Text(tr("수동 포트포워딩")).font(.headline)
+                Text(tr("한 줄에 로컬포트:대상호스트:대상포트 (예: 15432:10.0.0.5:5432)"))
                     .font(.caption).foregroundStyle(.secondary)
                 TextEditor(text: $forwardText)
                     .font(.system(size: 12, design: .monospaced))
@@ -215,12 +215,12 @@ struct ContentView: View {
                     .overlay(RoundedRectangle(cornerRadius: 5).stroke(.secondary.opacity(0.25)))
             }.disabled(applyingSettings)
             HStack {
-                Button("적용") { applyProxySettings() }.buttonStyle(.borderedProminent)
+                Button(tr("적용")) { applyProxySettings() }.buttonStyle(.borderedProminent)
                     .disabled(applyingSettings)
-                Text(proxyMessage).font(.callout)
+                Text(tr(proxyMessage)).font(.callout)
                     .foregroundStyle(proxyMessage.hasPrefix("실패") ? .red : .secondary)
             }
-            Text("Safari는 macOS 네트워크 설정의 웹·보안 웹 프락시에 HTTP 주소를 입력하세요. 수동 포트는 이 Mac의 127.0.0.1에서만 열립니다.")
+            Text(tr("Safari는 macOS 네트워크 설정의 웹·보안 웹 프락시에 HTTP 주소를 입력하세요. 수동 포트는 이 Mac의 127.0.0.1에서만 열립니다."))
                 .font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -700,7 +700,7 @@ private func controlRequest(path: String, command: String) throws -> String {
     let pathBytes = Array(path.utf8CString)
     guard pathBytes.count <= MemoryLayout.size(ofValue: address.sun_path) else {
         throw NSError(domain: "PPTPProxyClient", code: 3,
-                      userInfo: [NSLocalizedDescriptionKey: "제어 소켓 경로가 너무 깁니다."])
+                      userInfo: [NSLocalizedDescriptionKey: tr("제어 소켓 경로가 너무 깁니다.")])
     }
     withUnsafeMutableBytes(of: &address.sun_path) { raw in
         for i in pathBytes.indices { raw[i] = UInt8(bitPattern: pathBytes[i]) }
@@ -746,7 +746,7 @@ private func writeSecret(_ secret: String, to fifo: URL) throws {
     }
     guard descriptor >= 0 else {
         throw NSError(domain: "PPTPProxyClient", code: 2,
-                      userInfo: [NSLocalizedDescriptionKey: "VPN 암호 전달 대기 시간이 초과됐습니다."])
+                      userInfo: [NSLocalizedDescriptionKey: tr("VPN 암호 전달 대기 시간이 초과됐습니다.")])
     }
     defer { Darwin.close(descriptor) }
     let bytes = Array((secret + "\n").utf8)

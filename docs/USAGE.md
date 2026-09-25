@@ -1,9 +1,10 @@
 # 사용법 도움말
 
-[첫 페이지로 돌아가기](../README.md) · [최신 버전 다운로드](https://github.com/leesop/macos_PPTP_proxy_client/releases/latest)
+[첫 페이지로 돌아가기](../README.md) · [최신 버전 다운로드](https://github.com/leesop/macos_PPTP_proxy_client/releases/latest) · [English](#english)
 
 ## 시작 전 확인
 
+- **OS X El Capitan 10.11 이하**에서는 macOS 내장 PPTP VPN을 먼저 사용하세요. **macOS Sierra 10.12부터** 내장 PPTP 연결이 제거됐습니다. 이 앱은 **macOS 14 이상**에서 실행하며 특정 앱의 프락시·TCP 연결만 처리합니다. [Apple의 PPTP 지원 종료 안내](https://support.apple.com/en-us/100860)
 - Apple Silicon Mac과 macOS 14 이상이 필요합니다.
 - PPTP 서버 주소, VPN 아이디와 암호를 준비합니다. 서버가 PPTP 및 PPP/MPPE 연결을 받아야 합니다.
 - Mac에서 서버까지 PPTP 제어 연결과 GRE 통신이 가능해야 합니다.
@@ -66,3 +67,64 @@
 | 종료 후 포트가 계속 열려 있음 | **남은 연결 정리**를 사용하고 다시 연결합니다. |
 
 PPTP는 오래된 프로토콜입니다. 가능한 환경이라면 서버를 현대적인 VPN 프로토콜로 전환하는 편이 좋습니다. 이 앱은 PPTP만 남아 있는 장비와 서비스를 위한 호환 수단입니다.
+
+---
+
+## English
+
+# Usage and troubleshooting
+
+[Project home](../README.md#english) · [Latest release](https://github.com/leesop/macos_PPTP_proxy_client/releases/latest) · [한국어](#사용법-도움말)
+
+### Before you start
+
+**OS X El Capitan 10.11 and earlier** include a built-in PPTP VPN client. If PPTP is necessary on those systems, use the built-in VPN connection first. Apple removed it starting with **macOS Sierra 10.12**. This app runs on **Apple Silicon macOS 14 or later** and carries only proxy and explicitly forwarded TCP traffic. [Apple's PPTP removal notice](https://support.apple.com/en-us/100860)
+
+Have the PPTP server address, VPN user name, and password ready. The network must allow the PPTP control connection and GRE traffic to reach the server. The server must accept PPTP and PPP/MPPE connections.
+
+### Install and save a profile
+
+1. Download `PPTPProxy-notarized.zip` from the [latest release](https://github.com/leesop/macos_PPTP_proxy_client/releases/latest), unzip it, and launch `PPTPProxy.app`.
+2. On **Profiles & Connection**, enter a profile name, **PPTP Server**, **VPN User Name**, and **VPN Password**, then click **Save**. If you leave the profile name blank, the server address is used.
+3. To reuse a profile, select it from **Profile**. Passwords are stored in the macOS Keychain; enter a new password only when changing it. **Delete** removes both the profile and its stored password.
+
+### Connect
+
+Click **Connect** and approve the macOS administrator prompt if shown. The backend needs permission to open a GRE socket. Wait for **PPP/MPPE connected**; the app then opens **Proxy Settings**. Use **Show Log** on **Profiles & Connection** if the connection fails. Proxy requests are blocked until PPP/MPPE negotiation completes.
+
+### Configure a proxy
+
+| Type | Default address | Use |
+| --- | --- | --- |
+| HTTP | `127.0.0.1:18080` | HTTP clients and HTTPS clients that use `CONNECT` |
+| SOCKS5 | `127.0.0.1:11080` | Programs that support SOCKS5 |
+
+To change a port, enter it under **Proxy Settings** and click **Apply**. Configuring a proxy in a single program limits the effect to that program. For Safari, use macOS **System Settings → Network → current network → Details → Proxies** and set both **Web Proxy (HTTP)** and **Secure Web Proxy (HTTPS)** to `127.0.0.1` on port `18080`. This system setting may also affect other apps that honor it; turn it off when finished. [Apple's proxy setup guide](https://support.apple.com/guide/mac-help/change-proxy-settings-on-mac-mchlp2591/mac)
+
+### Forward TCP ports
+
+Enter one rule per line under **Proxy Settings → Manual Port Forwarding**, then click **Apply**:
+
+```text
+15432:10.0.0.5:5432
+18081:legacy.example.com:80
+```
+
+The first rule forwards TCP connections to this Mac's `127.0.0.1:15432` through PPTP to `10.0.0.5:5432`. The second forwards local port `18081` to the remote server's port `80`. Rules use `local-port:destination-host:destination-port`. Ports must be between `1` and `65535`, and local ports must not overlap each other or the proxy ports. Listeners bind only to `127.0.0.1`. Changes made while connected apply to new connections.
+
+### Status and disconnecting
+
+The top of the window shows connection status, bytes sent and received, and elapsed time. Click **Disconnect** to stop the backend. Quitting while connected shows a confirmation dialog. If a port remains occupied after a failed disconnect, use **Profiles & Connection → Clean Up Remaining Connection**; this checks that the process belongs to this app and may request administrator permission.
+
+### Troubleshooting
+
+| Symptom | What to check |
+| --- | --- |
+| Connect fails immediately | Check the server, account, password, administrator approval, and **Show Log**. |
+| PPTP data channel does not open | Check whether GRE passes between the Mac and the server. |
+| PPP negotiation or authentication fails | Check the server's PPTP/PPP/MPPE settings and the VPN account. |
+| **Apply** reports a local port error | Another app may be using the port. Choose a free port; the previous settings remain active after a conflict. |
+| Connected, but a program cannot reach its target | Check that program's proxy settings or the forwarded `127.0.0.1:local-port` address. System-wide traffic is not redirected automatically. |
+| Port remains open after disconnect | Use **Clean Up Remaining Connection**, then connect again. |
+
+PPTP is a legacy protocol. Migrate the server to a modern VPN protocol when possible. This app is a compatibility option for devices and services that still require PPTP.
